@@ -1,0 +1,453 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sistema NFT solar – Techo Completo Parejo 2x2</title>
+<style>
+:root{--bg:#eaf1ea;--fg:#1d2a22;--card:rgba(255,255,255,.92);--bd:#c3d1c6;--ac:#2f7d4f;--ac2:#2fb59b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a15;--fg:#e6efe8;--card:rgba(29,39,34,.92);--bd:#34463b;--ac:#6fcf97;--ac2:#4fd1b1}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;position:relative;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+#v{position:absolute;inset:0;touch-action:none;cursor:grab}
+#v.dragging{cursor:grabbing}
+#v canvas{display:block}
+.card{position:absolute;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 13px;backdrop-filter:blur(10px);box-shadow:0 6px 22px rgba(0,0,0,.1)}
+#info{left:10px;top:10px;max-width:min(300px,65vw)}
+#info h1{font-size:14px;margin:0 0 6px}
+#info ul{margin:0;padding-left:15px;font-size:12px;opacity:.92}
+#info ul li{margin-bottom:3px}
+#info ul b{color:var(--ac)}
+#timer-card{left:10px;bottom:80px;width:min(300px,70vw);font-size:11px;z-index:10}
+#timer-card h3{margin:0 0 4px;font-size:12px;color:var(--ac);display:flex;align-items:center;gap:6px}
+#timer-card .price{font-size:14px;font-weight:bold;margin-top:6px;color:var(--fg)}
+#timer-card .sub{font-size:10px;opacity:.75}
+#hud{right:10px;top:10px;display:flex;gap:6px;flex-wrap:wrap;font-size:11px;justify-content:flex-end;max-width:calc(100% - 20px)}
+#hud .chip{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:4px 10px;display:flex;align-items:center;gap:6px;backdrop-filter:blur(10px);box-shadow:0 4px 14px rgba(0,0,0,.08);font-variant-numeric:tabular-nums}
+#hud .chip b{color:var(--ac);font-weight:600}
+#hud .dot{width:8px;height:8px;border-radius:50%;background:var(--ac);animation:pulse 2s infinite}
+#hud .dot.sun{background:#f2b705;animation-delay:.3s}
+#hud .dot.bat{background:#3adb6a;animation-delay:.6s}
+#hud .dot.wat{background:#3aa0ff;animation-delay:.9s}
+@keyframes pulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+#ctl{left:50%;transform:translateX(-50%);bottom:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;width:max-content;max-width:calc(100% - 20px)}
+button{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:9px;padding:5px 11px;cursor:pointer;transition:.18s}
+button:hover{border-color:var(--ac);color:var(--ac)}
+button[aria-pressed="true"]{background:var(--ac);color:#fff;border-color:var(--ac)}
+label{display:flex;gap:6px;align-items:center;font-size:12px}
+input[type=range]{width:110px;accent-color:var(--ac);cursor:pointer}
+.lb{position:absolute;left:0;top:0;pointer-events:none;transform:translate(-50%,-135%);background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:2px 8px;font-size:11px;white-space:nowrap;opacity:.92;transition:.25s;z-index:5}
+.lb.hot{background:var(--ac);color:#fff;border-color:var(--ac);transform:translate(-50%,-155%) scale(1.08);opacity:1}
+.lb:after{content:"";position:absolute;left:50%;top:100%;width:1px;height:9px;background:var(--fg);opacity:.5}
+#det{right:10px;bottom:80px;width:min(330px,74vw);display:none;font-size:12px;max-height:62vh;overflow-y:auto;z-index:15}
+#det h2{font-size:14px;margin:0 0 8px;display:flex;align-items:center;gap:8px;padding-right:20px}
+#det .icon{font-size:20px;line-height:1}
+#det .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+#det .chip{background:linear-gradient(135deg,rgba(47,181,155,.15),rgba(47,125,79,.1));border:1px solid rgba(47,181,155,.35);border-radius:14px;padding:3px 9px;font-size:10.5px;color:var(--ac);font-weight:600}
+#det .bar{margin-bottom:8px}
+#det .bar .top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;opacity:.85}
+#det .bar .track{height:7px;background:rgba(0,0,0,.1);border-radius:4px;overflow:hidden}
+#det .bar .fill{height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:4px;transition:width .9s cubic-bezier(.2,.8,.3,1)}
+#det p{margin:8px 0 0;line-height:1.55;opacity:.88;font-size:12px}
+#det .close{position:absolute;right:8px;top:6px;border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--fg);line-height:1;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0}
+#det .close:hover{background:rgba(0,0,0,.08)}
+@media(max-width:520px){#info{font-size:11px;max-width:58vw}#timer-card{display:none}#info h1{font-size:13px}#info ul{font-size:11px}#det{bottom:96px;width:min(300px,86vw)}#hud{font-size:10px}button{padding:4px 8px;font-size:12px}input[type=range]{width:80px}}
+</style></head><body>
+<div id="v"></div>
+<div class="card" id="info">
+<h1>🌱 Módulo 2x2 con Techo Fotovoltaico Parejo · 40 m²</h1>
+<ul>
+<li><b>4 casetas (2 adelante, 2 atrás)</b></li>
+<li>Superficie solar 100 % limpia por arriba</li>
+<li>896 plantas (64 canales en 2 niveles)</li>
+<li><b>1 Bomba sumergible y 1 Tanque subterráneo central</b></li>
+<li>Incluye Temporizador TUE-2(A) de Deakro</li>
+<li>Arrastra para girar · rueda/pellizco = zoom</li>
+</ul>
+</div>
+
+<div class="card" id="timer-card">
+<h3>⏱️ Temporizador digital TUE-2(A)</h3>
+<div>Programación horaria (intervalos de 1 min) · 220–240 V</div>
+<div style="opacity:.8;margin-top:3px">Proveedor: <b>Deakro Nicaragua</b></div>
+<div class="price">US$16.16 <span class="sub">(≈ C$592)</span></div>
+<div class="sub" style="margin-top:2px">Controla la bomba principal central para las 4 casetas.</div>
+</div>
+
+<div id="hud">
+<div class="chip"><span class="dot"></span><span>Hora <b id="hHora">10:00</b></span></div>
+<div class="chip"><span class="dot sun"></span><span>FV <b id="hPot">0 W</b></span></div>
+<div class="chip"><span class="dot wat"></span><span>Caudal <b id="hCaudal">0 L/min</b></span></div>
+<div class="chip"><span class="dot bat"></span><span>Batería <b id="hBat">0 %</b></span></div>
+</div>
+<div class="card" id="ctl">
+<button id="bL" aria-pressed="true">Etiquetas</button>
+<button id="bF" aria-pressed="true">Flujo</button>
+<button id="bW" aria-pressed="false">Ventilación</button>
+<button id="bP" aria-pressed="true">Paneles</button>
+<button id="bR">Vista isométrica</button>
+<label>Sol <input id="sun" type="range" min="6.5" max="17.5" step=".1" value="10"><span id="hr" style="min-width:42px;font-variant-numeric:tabular-nums">10:00</span></label>
+</div>
+<div class="card" id="det"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+const T=THREE,wrap=document.getElementById('v');
+const R=new T.WebGLRenderer({antialias:true,alpha:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));
+R.shadowMap.enabled=true;R.shadowMap.type=T.PCFSoftShadowMap;
+wrap.appendChild(R.domElement);
+const S=new T.Scene(),cam=new T.OrthographicCamera(-1,1,1,-1,.1,100);
+const root=new T.Group();S.add(root);
+const panelG=new T.Group(),flowG=new T.Group(),windG=new T.Group();
+root.add(panelG,flowG,windG);windG.visible=false;
+S.add(new T.HemisphereLight(0xffffff,0x6f8a6f,.75));
+const sun=new T.DirectionalLight(0xfff4e0,1.0);
+sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-15,right:15,top:10,bottom:-10,near:1,far:50});
+sun.shadow.bias=-.0006;S.add(sun);
+let K=null;
+const M=(c,o={})=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.6,metalness:.1},o));
+function add(g,m,x,y,z,p){const o=new T.Mesh(g,m);o.position.set(x,y,z);o.userData.k=K;o.castShadow=o.receiveShadow=true;(p||root).add(o);return o}
+const box=(w,h,d,m,x,y,z,p)=>add(new T.BoxGeometry(w,h,d),m,x,y,z,p);
+function seg(a,b,r,m,p){a=new T.Vector3(...a);b=new T.Vector3(...b);
+const o=new T.Mesh(new T.CylinderGeometry(r,r,a.distanceTo(b),10),m);
+o.position.copy(a).add(b).multiplyScalar(.5);
+o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),b.clone().sub(a).normalize());
+o.userData.k=K;o.castShadow=true;(p||root).add(o);return o}
+function line(pts,r,m,p){for(let i=0;i<pts.length-1;i++)seg(pts[i],pts[i+1],r,m,p);
+for(let i=1;i<pts.length-1;i++)add(new T.SphereGeometry(r*1.08,10,8),m,...pts[i],p)}
+const mS=M(0x8d98a1,{metalness:.6,roughness:.45}),mB=M(0x2a7de1,{transparent:true,opacity:.5}),mG=M(0x2fb59b,{transparent:true,opacity:.5});
+
+// PISO BASE COMPACTO
+K=null;
+box(10.5,.04,6.8,M(0xcbc5b2,{roughness:.95}),0,-.02,0);
+box(1.5,.62,.9,M(0x253028,{transparent:true,opacity:.4,roughness:.9}),0,-.32,0).castShadow=false;
+
+// POSICIONES 2x2 (2 ATRÁS Z=-1.75, 2 ADELANTE Z=1.75)
+const pos2x2 = [
+  {x: -2.3, z: -1.75}, {x: 2.3, z: -1.75},
+  {x: -2.3, z: 1.75},  {x: 2.3, z: 1.75}
+];
+
+// ESTRUCTURAS INFERIORES DE LAS CASETAS (ALTURA AJUSTADA BAJO EL TECHO)
+pos2x2.forEach((p) => {
+  K='est';
+  [[-1.8,-1.25,1.25],[1.8,-1.25,1.25],[-1.8,.2,1.38],[1.8,.2,1.38],[-1.8,1.25,1.5],[0,1.25,1.5],[1.8,1.25,1.5]].forEach(([x,dz,h])=>box(.07,h,.07,mS,p.x+x,h/2,p.z+dz));
+  box(3.67,.05,.05,mS,p.x,1.85,p.z-1.25);box(3.67,.05,.05,mS,p.x,1.98,p.z+.2);box(3.67,.05,.05,mS,p.x,2.15,p.z+1.25);
+  [-1.8,1.8].forEach(x=>{seg([p.x+x,1.85,p.z-1.25],[p.x+x,1.98,p.z+.2],.025,mS);seg([p.x+x,1.98,p.z+.2],[p.x+x,2.15,p.z+1.25],.025,mS);box(.05,.05,2.5,mS,p.x+x,.15,p.z)});
+  seg([p.x,1.98,p.z+.2],[p.x,2.15,p.z+1.25],.025,mS);box(3.67,.05,.05,mS,p.x,.15,p.z-1.25);box(3.67,.05,.05,mS,p.x,.15,p.z+1.25);
+});
+
+// CUBIERTA FOTOVOLTAICA AZUL CONTINUA Y COMPLETA
+K='panel';
+const cv=document.createElement('canvas');cv.width=512;cv.height=320;const cx=cv.getContext('2d');
+cx.fillStyle='#10305e';cx.fillRect(0,0,512,320);cx.strokeStyle='#648bc0';cx.lineWidth=1.5;
+for(let i=0;i<=32;i++){cx.beginPath();cx.moveTo(i*16,0);cx.lineTo(i*16,320);cx.stroke()}
+for(let i=0;i<=20;i++){cx.beginPath();cx.moveTo(0,i*16);cx.lineTo(512,i*16);cx.stroke()}
+const tx=new T.CanvasTexture(cv),mP=M(0xffffff,{map:tx,roughness:.25,metalness:.3});
+
+const pUnicoN = add(new T.BoxGeometry(9.2, .06, 3.4), mP, 0, 2.38, 1.5, panelG);
+pUnicoN.rotation.x = -Math.atan(.27/1.05);
+const pUnicoS = add(new T.BoxGeometry(9.2, .06, 3.4), mP, 0, 2.21, -1.5, panelG);
+pUnicoS.rotation.x = -Math.atan(.13/1.05);
+
+// CANALES NFT Y LECHUGAS EN 2 NIVELES POR CASETA
+const zsRel=[...Array(8)].map((_,i)=>-0.75+i*.18);
+const mCh=M(0xf4f6f7,{transparent:true,opacity:.5,roughness:.4}),mW=M(0x3aa0ff,{transparent:true,opacity:.8}),
+mPot=M(0x2b2f33),mRt=M(0xf0e6c8),
+gPot=new T.CylinderGeometry(.034,.026,.05,10),gRt=new T.CylinderGeometry(.004,.002,.06,5),
+gl=[0x4caf50,0x5fbf4a,0x3f9e46,0x7acb55,0x6b9e3a].map(c=>M(c,{roughness:.85,side:T.DoubleSide})),
+mRed=M(0x8e3556,{roughness:.85,side:T.DoubleSide}),mIn=M(0xa6dd6e,{roughness:.85,side:T.DoubleSide});
+
+const gPetalExt = new T.ConeGeometry(.06, .09, 5, 1, true, 0, Math.PI * 1.3);
+const gPetalInt = new T.ConeGeometry(.04, .07, 5, 1, true, 0, Math.PI * 1.3);
+
+function crearLechuga(esSangria, matBase){
+  const g = new T.Group();
+  const mat = esSangria ? mRed : matBase;
+  for(let i=0; i<5; i++){
+    const leaf = new T.Mesh(gPetalExt, mat);
+    leaf.rotation.x = 1.2; leaf.rotation.y = (i * Math.PI * 2 / 5); leaf.position.y = .04; leaf.scale.set(1.2, .8, 1.2); g.add(leaf);
+  }
+  for(let i=0; i<4; i++){
+    const leaf = new T.Mesh(gPetalInt, mat);
+    leaf.rotation.x = .7; leaf.rotation.y = (i * Math.PI * 2 / 4) + .4; leaf.position.y = .06; g.add(leaf);
+  }
+  const core = new T.Mesh(gPetalInt, mIn); core.position.y = .08; core.scale.set(.7, .9, .7); g.add(core);
+  return g;
+}
+
+const ycInferior = x => .864 - .02*x;
+
+pos2x2.forEach((p, cIdx) => {
+  [-1.2,0,1.2].forEach(x=>{
+    const y1 = .864 - .02*x - .075;
+    box(.06,.04,1.45,mS,p.x+x,y1,p.z-.425);
+    [-1.12,.28].forEach(dz=>box(.05,y1,.05,mS,p.x+x,y1/2,p.z+dz));
+    const y2 = y1 + .55;
+    box(.06,.04,1.45,mS,p.x+x,y2,p.z-.425);
+    [-1.12,.28].forEach(dz=>box(.05,.55,.05,mS,p.x+x,y1 + .275,p.z+dz));
+  });
+
+  [0, .55].forEach((yOffset, lvlIdx) => {
+    zsRel.forEach((dz,j)=>{
+      K='canal';
+      const g=new T.Group();
+      g.position.set(p.x, ycInferior(0) + yOffset, p.z+dz);
+      g.rotation.z=-.02;
+      root.add(g);
+      add(new T.BoxGeometry(3.2,.1,.075),mCh,0,0,0,g).castShadow=false;
+      add(new T.BoxGeometry(3.18,.012,.055),mW,0,-.035,0,g).castShadow=false;
+      
+      K='lech';
+      for(let i=0;i<14;i++){
+        const x=-1.45+i*.22;
+        add(gPot,mPot,x,.065,0,g); add(gRt,mRt,x,.02,0,g);
+        const isRed = (cIdx*14 + lvlIdx*7 + j*3 + i)%9===4;
+        const lech = crearLechuga(isRed, gl[(i+j+lvlIdx+cIdx)%5]);
+        lech.position.set(x, .05, 0);
+        g.add(lech);
+      }
+    });
+  });
+});
+
+// TANQUE DE NUTRIENTES Y BOMBA CENTRAL SUBTERRÁNEA COMPARTIDA
+K='tanque';
+box(1.2,.55,.7,M(0x1f5fa8,{transparent:true,opacity:.45}),0,-.32,0).castShadow=false;
+box(1.16,.40,.66,mW,0,-.38,0).castShadow=false;
+box(1.3,.03,.8,M(0x6d6a60),0,-.035,0);
+
+K='bomba';
+add(new T.CylinderGeometry(.06,.06,.15,14),M(0x25282c),0,-.5,0);
+
+// RED DE TUBERÍAS CENTRALES DE IMPULSIÓN
+K='imp';
+const mainImp = [[0,-.5,0],[0,1.75,0],[-3.8,1.75,0],[-3.8,1.75,-2.5]]; line(mainImp,.022,mB);
+const secImp1 = [[0,1.75,0],[3.8,1.75,0],[3.8,1.75,-2.5]]; line(secImp1,.022,mB);
+const secImp2 = [[-3.8,1.75,0],[-3.8,1.75,2.5]]; line(secImp2,.022,mB);
+const secImp3 = [[3.8,1.75,0],[3.8,1.75,2.5]]; line(secImp3,.022,mB);
+
+pos2x2.forEach(p => {
+  zsRel.forEach(dz => {
+    seg([p.x-1.5,1.75,p.z+dz],[p.x-1.5,.96,p.z+dz],.007,mB);
+    seg([p.x-1.5,1.51,p.z+dz],[p.x-1.5,1.51,p.z+dz],.007,mB);
+  });
+});
+
+K='valv'; box(.05,.05,.05,M(0xd62828),0,1.2,0); seg([0,1.15,0],[0,1.22,0],.008,M(0xd62828));
+
+// RED DE TUBERÍAS CENTRALES DE RETORNO AL TANQUE SUBTERRÁNEO
+K='ret';
+const mainRet = [[-3.8,1.29,-2.5],[-3.8,1.29,0],[0,1.29,0],[0,-.25,0]]; line(mainRet,.024,mG);
+const secRet1 = [[3.8,1.29,-2.5],[3.8,1.29,0],[0,1.29,0]]; line(secRet1,.024,mG);
+const secRet2 = [[-3.8,1.29,2.5],[-3.8,1.29,0]]; line(secRet2,.024,mG);
+const secRet3 = [[3.8,1.29,2.5],[3.8,1.29,0]]; line(secRet3,.024,mG);
+
+pos2x2.forEach(p => {
+  zsRel.forEach(dz => {
+    seg([p.x+1.5,.79,p.z+dz],[p.x+1.6,.74,p.z+dz],.01,mG);
+    seg([p.x+1.5,1.34,p.z+dz],[p.x+1.6,1.29,p.z+dz],.01,mG);
+  });
+});
+
+K='ctrl'; box(.34,.44,.14,M(0xdfe4e8),-.4,1.4,.4); box(.2,.12,.01,M(0x1b2a33),-.4,1.47,.33);
+[-.48,-.4,-.32].forEach((x,i)=>add(new T.SphereGeometry(.014,8,6),M(i?0x3adb6a:0xf2c230,{emissive:i?0x16a043:0x806000}),x,1.3,.33));
+
+K='timer'; box(.14,.22,.12,M(0xffffff),.4,1.38,.4); box(.09,.07,.01,M(0x89a0b0),.4,1.43,.33);
+
+K='bat'; box(.32,.2,.16,M(0x1d3557),.55,.1,.4);
+
+K=null; const mA=M(0x5cd6ff,{transparent:true,opacity:.75,emissive:0x1a7fa0});
+function arrow(p,d,L){d=new T.Vector3(...d).normalize();const g=new T.Group();
+const c=new T.Mesh(new T.CylinderGeometry(.025,.025,L*.7,8),mA);c.position.y=L*.35;
+const h=new T.Mesh(new T.ConeGeometry(.07,L*.3,10),mA);h.position.y=L*.85;
+g.add(c,h);g.position.set(...p);g.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d);windG.add(g)}
+[-2.3,2.3].forEach(x=>{ arrow([x,1.1,-3.2],[0,.15,1],.8); arrow([x,1.1,0.3],[0,.15,1],.8); });
+
+const paths=[]; function mk(pts,n,spd,col){const v=pts.map(p=>new T.Vector3(...p)),L=[0];
+for(let i=1;i<v.length;i++)L.push(L[i-1]+v[i].distanceTo(v[i-1]));
+paths.push({v,L,len:L[L.length-1],n,spd,col})}
+
+mk(mainImp,25,.5,0x8fdcff); mk(secImp1,25,.5,0x8fdcff); mk(secImp2,20,.5,0x8fdcff); mk(secImp3,20,.5,0x8fdcff);
+pos2x2.forEach(p => {
+  zsRel.forEach(dz => {
+    mk([[p.x-1.5,.96,p.z+dz],[p.x-1.5,ycInferior(-1.5)-.03,p.z+dz],[p.x+1.5,ycInferior(1.5)-.03,p.z+dz],[p.x+1.6,.74,p.z+dz]],4,.18,0x9fe2ff);
+    mk([[p.x-1.5,1.51,p.z+dz],[p.x-1.5,ycInferior(-1.5)+.52,p.z+dz],[p.x+1.5,ycInferior(1.5)+.52,p.z+dz],[p.x+1.6,1.29,p.z+dz]],4,.18,0x9fe2ff);
+  });
+});
+mk(mainRet,25,.45,0x7ff0d0); mk(secRet1,25,.45,0x7ff0d0); mk(secRet2,20,.45,0x7ff0d0); mk(secRet3,20,.45,0x7ff0d0);
+
+const pp=[];paths.forEach((p,i)=>{for(let k=0;k<p.n;k++)pp.push([i,k/p.n*p.len])});
+const pos=new Float32Array(pp.length*3),col=new Float32Array(pp.length*3);
+pp.forEach(([i],j)=>{const c=new T.Color(paths[i].col);col.set([c.r,c.g,c.b],j*3)});
+const geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(pos,3));
+geo.setAttribute('color',new T.BufferAttribute(col,3));
+const pts=new T.Points(geo,new T.PointsMaterial({size:5,sizeAttenuation:false,vertexColors:true,depthWrite:false}));
+pts.frustumCulled=false;flowG.add(pts);
+
+function upd(t){pp.forEach(([i,o],j)=>{const p=paths[i],s=(o+t*p.spd)%p.len;
+let k=1;while(p.L[k]<s)k++;
+const a=p.v[k-1],b=p.v[k],f=(s-p.L[k-1])/(p.L[k]-p.L[k-1]);
+pos[j*3]=a.x+(b.x-a.x)*f;pos[j*3+1]=a.y+(b.y-a.y)*f;pos[j*3+2]=a.z+(b.z-a.z)*f});
+geo.attributes.position.needsUpdate=true}
+
+const INFO={
+  est:{icon:'🏗️',title:'Estructura de 4 Casetas (Bloque 2x2)',
+    chips:['Galvanizado','Módulo 2x2','40 m² totales'],
+    bars:[['Rigidez',92],['Vida útil',95],['Producción',100]],
+    desc:'Bloque compacto de 4 casetas dispuestas 2x2 bajo un solo techo fotovoltaico totalmente parejo y continuo.'},
+  panel:{icon:'☀️',title:'Techo Fotovoltaico Parejo y Unificado',
+    chips:['Matriz Continua','6.4 kWp pico','Superficie Azul Limpia'],
+    bars:[['Potencia relativa',100],['Eficiencia',95],['Sombra al sistema',100]],
+    desc:'Un solo techo solar parejo e integral que cubre completamente el bloque de 4 casetas sin marcos o vigas sobresalientes por arriba.'},
+  timer:{icon:'⏱️',title:'Temporizador digital TUE-2(A)',
+    chips:['Deakro Nicaragua','US$16.16 (C$592)','220–240 V'],
+    bars:[['Programación horaria',95],['Intervalos min.',100],['Ahorro energético',90]],
+    desc:'Sincroniza el encendido automático de la bomba central compartida para las 4 casetas del bloque 2x2.'},
+  bat:{icon:'🔋',title:'Batería Central 24 V',
+    chips:['24 V','≥200 Ah','≈4,8 kWh'],
+    bars:[['Carga actual',80],['Salud',95],['Autonomía nocturna',75]],
+    desc:'Reserva de energía centralizada para asegurar el bombeo en horarios nocturnos y días nublados.'},
+  ctrl:{icon:'🎛️',title:'Controlador MPPT Central',
+    chips:['MPPT','24 V','Protección'],
+    bars:[['Eficiencia MPPT',96],['Protección',92]],
+    desc:'Gestiona la carga desde la matriz fotovoltaica pareja hacia el banco de baterías.'},
+  bomba:{icon:'⚙️',title:'1 Bomba Sumergible Central (24 V)',
+    chips:['24 V CC','40–60 L/min','Única Fuente'],
+    bars:[['Caudal total',90],['Eficiencia hidráulica',95]],
+    desc:'Bomba central que abastece de agua con nutrientes a toda la matriz 2x2 desde un solo punto.'},
+  tanque:{icon:'💧',title:'Tanque Subterráneo Central ~300 L',
+    chips:['~300 L','Soterrado Central','Única Fuente'],
+    bars:[['Volumen',80],['Aislamiento térmico',98],['Anti-algas',100]],
+    desc:'Tanque único enterrado en el centro del bloque 2x2 que recolecta el retorno por gravedad y redistribuye a las 4 casetas.'},
+  imp:{icon:'🔵',title:'Red Colectiva de Impulsión 2x2',
+    chips:['PVC 1″ a 3/4″','64 tomas','4 Casetas'],
+    bars:[['Presión',85],['Caudal distribuido',90]],
+    desc:'Tubería principal que se ramifica desde el centro hacia las 2 casetas frontales y las 2 casetas traseras.'},
+  ret:{icon:'🟢',title:'Red Colectiva de Retorno',
+    chips:['PVC 1.5″','Gravedad','Retorno Central'],
+    bars:[['Caudal retorno',95],['Pendiente',80]],
+    desc:'Colector general de retorno que reconduce la solución nutritiva de las 4 casetas de vuelta al tanque subterráneo central.'},
+  canal:{icon:'🟦',title:'Canales NFT (64 totales)',
+    chips:['64 canales','3,2 m','2 Niveles por caseta'],
+    bars:[['Capacidad',100],['Pendiente',75]],
+    desc:'64 canales NFT de PVC distribuidos en 2 niveles verticales a lo largo de la matriz 2x2.'},
+  lech:{icon:'🥬',title:'Producción de Lechugas (896 plantas)',
+    chips:['896 plantas','Módulo 2x2','30–40 días'],
+    bars:[['Densidad productiva',100],['Salud',92]],
+    desc:'896 plantas de lechuga (verdes y rojas sangría) producidas simultáneamente en la matriz 2x2 con la misma fuente de agua.'}
+};
+
+const LB=[
+['Techo Fotovoltaico Unificado (6.4 kWp)',[0,2.6,0],'panel'],
+['Bloque 2x2 de Casetas (40 m²)',[-2.3,1.8,-1.75],'est'],
+['Tanque Subterráneo Central ~300 L',[0,-.35,0],'tanque'],
+['1 Bomba Solar Central (24 V)',[0,-.48,0],'bomba'],
+['Temporizador TUE-2(A)',[.4,1.55,.4],'timer'],
+['896 Lechugas (64 Canales)',[2.3,1.7,1.75],'lech'],
+['Red Colectiva de Impulsión',[-1.9,1.75,0],'imp'],
+['Red Colectiva de Retorno',[1.9,1.33,0],'ret'],
+['Batería Central 24 V',[.55,.3,.4],'bat']
+].map(([t,p,k])=>{const d=document.createElement('div');d.className='lb';d.textContent=t;
+wrap.appendChild(d);return[d,new T.Vector3(...p),k]});
+
+const RC=new T.Raycaster(),det=document.getElementById('det');
+let hb=null,selKey=null;
+function vis(o){for(;o;o=o.parent)if(!o.visible)return false;return true}
+function clearSel(){if(hb){S.remove(hb);hb=null}selKey=null;det.style.display='none';
+LB.forEach(([d,,k])=>{if(k)d.classList.remove('hot')})}
+function setBar(el,v){requestAnimationFrame(()=>el.style.width=v+'%')}
+function pick(cx,cy){
+  const r=wrap.getBoundingClientRect();
+  RC.setFromCamera({x:(cx-r.left)/r.width*2-1,y:-((cy-r.top)/r.height)*2+1},cam);
+  const h=RC.intersectObjects(root.children,true).find(i=>i.object.userData.k&&vis(i.object));
+  clearSel();if(!h)return;
+  const k=h.object.userData.k;selKey=k;
+  const b=new T.Box3();root.traverse(o=>{if(o.isMesh&&o.userData.k===k&&vis(o))b.expandByObject(o)});
+  hb=new T.Box3Helper(b,0xffc400);hb.material.depthTest=false;hb.renderOrder=9;S.add(hb);
+  const I=INFO[k];if(!I)return;
+  LB.forEach(([d,,lk])=>{if(lk===k)d.classList.add('hot')});
+  let html='<button class="close" id="x">×</button>';
+  html+='<h2><span class="icon">'+I.icon+'</span>'+I.title+'</h2>';
+  if(I.chips)html+='<div class="chips">'+I.chips.map(c=>'<span class="chip">'+c+'</span>').join('')+'</div>';
+  if(I.bars)I.bars.forEach(([n,v])=>{html+='<div class="bar"><div class="top"><span>'+n+'</span><span>'+v+'%</span></div><div class="track"><div class="fill" data-v="'+v+'"></div></div></div>'});
+  html+='<p>'+I.desc+'</p>';
+  det.innerHTML=html;det.style.display='block';
+  det.querySelectorAll('.fill').forEach(f=>setBar(f,+f.dataset.v));
+  document.getElementById('x').onclick=clearSel;
+}
+let st=null;
+wrap.addEventListener('pointerdown',e=>{st=[e.clientX,e.clientY]});
+wrap.addEventListener('pointerup',e=>{if(st&&Math.hypot(e.clientX-st[0],e.clientY-st[1])<6)pick(e.clientX,e.clientY)});
+const tgt=new T.Vector3(0,1,0);let az=Math.PI*.75,el=.6155,zoom=5.5;
+function setCam(){const w=wrap.clientWidth,h=wrap.clientHeight,a=w/h;R.setSize(w,h);
+const hh=a<1?zoom/a:zoom;cam.top=hh;cam.bottom=-hh;cam.left=-hh*a;cam.right=hh*a;cam.updateProjectionMatrix()}
+function place(){cam.position.set(tgt.x+25*Math.cos(el)*Math.sin(az),tgt.y+25*Math.sin(el),tgt.z+25*Math.cos(el)*Math.cos(az));cam.lookAt(tgt)}
+addEventListener('resize',setCam);
+const ptr=new Map();
+wrap.addEventListener('pointerdown',e=>{wrap.classList.add('dragging');wrap.setPointerCapture(e.pointerId);ptr.set(e.pointerId,e)});
+wrap.addEventListener('pointerup',e=>{wrap.classList.remove('dragging');ptr.delete(e.pointerId)});
+wrap.addEventListener('pointercancel',e=>{wrap.classList.remove('dragging');ptr.delete(e.pointerId)});
+wrap.addEventListener('pointermove',e=>{const o=ptr.get(e.pointerId);if(!o)return;
+ if(ptr.size==1){az-=(e.clientX-o.clientX)*.007;el=Math.max(.1,Math.min(1.45,el+(e.clientY-o.clientY)*.006))}
+ else if(ptr.size==2){const q=[...ptr.values()],
+ d0=Math.hypot(q[0].clientX-q[1].clientX,q[0].clientY-q[1].clientY);
+ ptr.set(e.pointerId,e);const q2=[...ptr.values()],
+ d1=Math.hypot(q2[0].clientX-q2[1].clientX,q2[0].clientY-q2[1].clientY);
+ zoom=Math.max(2,Math.min(12,zoom*d0/d1));setCam();return}
+ ptr.set(e.pointerId,e)});
+wrap.addEventListener('wheel',e=>{e.preventDefault();
+ zoom=Math.max(2,Math.min(12,zoom*(1+e.deltaY*.001)));setCam()},{passive:false});
+const tog=(id,fn)=>{const b=document.getElementById(id);b.onclick=()=>{
+ const v=b.getAttribute('aria-pressed')!='true';b.setAttribute('aria-pressed',v);fn(v)}};
+let showL=true;
+tog('bL',v=>{showL=v;LB.forEach(([d])=>d.style.display=v?'':'none')});
+tog('bF',v=>flowG.visible=v);
+tog('bW',v=>windG.visible=v);
+tog('bP',v=>panelG.visible=v);
+document.getElementById('bR').onclick=()=>{az=Math.PI*.75;el=.6155;zoom=5.5;setCam()};
+let dayH=10,bat=80;
+function setSun(h){
+ dayH=h;
+ const a=(h-6)/12*Math.PI;
+ sun.position.set(-Math.cos(a)*20,Math.sin(a)*20+.5,-Math.sin(a)*5);
+ sun.intensity=.45+.65*Math.sin(a);
+ const hi=Math.max(0,Math.sin(a));
+ const pot=Math.round(6400*Math.pow(hi,1.15));
+ let ca=0;
+ if(h<7||h>17)ca=0;
+ else if(h<9)ca=(h-7)*20;
+ else if(h<16)ca=50+(Math.sin((h-9)/7*Math.PI)*10);
+ else ca=Math.max(0,50-(h-16)*25);
+ ca=Math.round(ca*10)/10;
+ if(h>=7&&h<=17){bat=Math.min(100,bat+0.12*(1-Math.abs(h-12)/6))}else{bat=Math.max(15,bat-0.05)}
+ document.getElementById('hHora').textContent=Math.floor(h)+':'+('0'+Math.round(h%1*60)).slice(-2);
+ document.getElementById('hr').textContent=Math.floor(h)+':'+('0'+Math.round(h%1*60)).slice(-2);
+ document.getElementById('hPot').textContent=pot+' W';
+ document.getElementById('hCaudal').textContent=ca.toFixed(1)+' L/min';
+ document.getElementById('hBat').textContent=Math.round(bat)+' %';
+}
+const sl=document.getElementById('sun');
+sl.oninput=()=>setSun(+sl.value);
+setSun(10);
+setCam();
+const v3=new T.Vector3();
+let last=0;
+(function loop(t){
+ requestAnimationFrame(loop);
+ const dt=(t-last)/1000;last=t;
+ if(dayH>=7&&dayH<=17){bat=Math.min(100,bat+0.05*dt)}else{bat=Math.max(15,bat-0.03*dt)}
+ document.getElementById('hBat').textContent=Math.round(bat)+' %';
+ place();
+ upd(t/1000);
+ R.render(S,cam);
+ if(showL){
+   const w=wrap.clientWidth,h=wrap.clientHeight;
+   LB.forEach(([d,p])=>{v3.copy(p).project(cam);
+     d.style.left=((v3.x*.5+.5)*w)+'px';
+     d.style.top=((-v3.y*.5+.5)*h)+'px'});
+ }
+})(0);
+})();
+</script></body></html>
